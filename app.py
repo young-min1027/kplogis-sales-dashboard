@@ -3,7 +3,10 @@
 import streamlit as st
 
 from src.erp_client import ERP_SOURCE, fetch_sales_records
-from src.metrics import new_and_churned_customers, sales_by_office, sales_by_salesperson
+from src.metrics import new_and_churned_customers, sales_by_salesperson
+
+ALLOWED_SALESPEOPLE = ["정영민", "김현훈", "백주홍", "박성훈", "가주형", "양희헌"]
+CHURN_WINDOW_MONTHS = 3
 
 st.set_page_config(page_title="경평물류 영업 실적", layout="wide")
 st.title("경평물류 영업 실적 대시보드")
@@ -17,22 +20,17 @@ months_back = 6
 if ERP_SOURCE == "mock":
     months_back = st.sidebar.slider("조회 기간(개월)", min_value=2, max_value=12, value=6)
 df = fetch_sales_records(months_back=months_back)
+df = df[df["영업사원"].isin(ALLOWED_SALESPEOPLE)]
 
-tab_office, tab_salesperson, tab_customers = st.tabs(
-    ["사무소별 매출", "영업사원별 매출", "신규·이탈 화주"]
-)
-
-with tab_office:
-    office_df = sales_by_office(df)
-    st.bar_chart(office_df.set_index("사무소")["매출액"])
-    st.dataframe(office_df, width="stretch")
+tab_salesperson, tab_customers = st.tabs(["영업사원별 매출", "신규·이탈 화주"])
 
 with tab_salesperson:
     salesperson_df = sales_by_salesperson(df)
     st.dataframe(salesperson_df, width="stretch")
 
 with tab_customers:
-    new_customers, churned_customers = new_and_churned_customers(df)
+    st.caption(f"최근 {CHURN_WINDOW_MONTHS}개월 구간 vs 그 이전 {CHURN_WINDOW_MONTHS}개월 구간 기준")
+    new_customers, churned_customers = new_and_churned_customers(df, window_months=CHURN_WINDOW_MONTHS)
 
     col_new, col_churned = st.columns(2)
     with col_new:

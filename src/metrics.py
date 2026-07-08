@@ -5,7 +5,7 @@ import pandas as pd
 
 def sales_by_salesperson(df: pd.DataFrame) -> pd.DataFrame:
     return (
-        df.groupby(["사무소", "영업사원"], as_index=False)["매출액"]
+        df.groupby("영업사원", as_index=False)["매출액"]
         .sum()
         .sort_values("매출액", ascending=False)
         .reset_index(drop=True)
@@ -20,7 +20,7 @@ def new_and_churned_customers(df: pd.DataFrame, window_months: int = 1) -> tuple
     """
     months = sorted(df["월"].unique())
     if len(months) < window_months * 2:
-        empty = df.iloc[0:0][["화주", "사무소", "영업사원", "매출액"]]
+        empty = df.iloc[0:0][["화주", "영업사원", "매출액"]]
         return empty, empty
 
     latest_window = months[-window_months:]
@@ -36,6 +36,6 @@ def new_and_churned_customers(df: pd.DataFrame, window_months: int = 1) -> tuple
     churned_names = prev_customers - latest_customers
     churned_customers = prev_df[prev_df["화주"].isin(churned_names)]
 
-    new_cols = new_customers[["화주", "사무소", "영업사원", "매출액"]].drop_duplicates("화주")
-    churned_cols = churned_customers[["화주", "사무소", "영업사원", "매출액"]].drop_duplicates("화주")
+    new_cols = new_customers[["화주", "영업사원", "매출액"]].drop_duplicates("화주")
+    churned_cols = churned_customers[["화주", "영업사원", "매출액"]].drop_duplicates("화주")
     return new_cols.reset_index(drop=True), churned_cols.reset_index(drop=True)
